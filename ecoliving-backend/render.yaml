@@ -1,10 +1,9 @@
-# render.yaml
 services:
   - type: web
     name: ecoliving-backend
-    runtime: docker
-    dockerfilePath: ./ecoliving-backend/Dockerfile
-    dockerContext: ./ecoliving-backend
+    env: java
+    buildCommand: mvn clean package
+    startCommand: java -jar target/ecoliving-backend-1.0.0.jar
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -18,7 +17,4 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
-    autoDeploy: true
-    healthCheckPath: /api/health
-    numInstances: 1
-    plan: free
+
