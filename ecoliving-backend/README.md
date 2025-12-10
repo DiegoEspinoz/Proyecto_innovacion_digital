@@ -24,7 +24,7 @@ Backend API para la plataforma ECOLIVING desarrollado con Spring Boot y MySQL.
 mvn spring-boot:run
 ```
 
-La aplicación estará disponible en `http://localhost:8080`
+La aplicación estará disponible en `https://proyecto-innovacion-digital.onrender.com`
 
 ## Endpoints Principales
 
