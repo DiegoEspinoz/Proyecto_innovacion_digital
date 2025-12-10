@@ -58,7 +58,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://proyecto-innovacion-digital.onrender.com',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       }
