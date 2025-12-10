@@ -1,15 +1,19 @@
-// Configuración de la API
+// config/api.ts - VERSIÓN CORRECTA
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || 'https://proyecto-innovacion-digital.onrender.com',
-  timeout: 10000,
+  // ⭐⭐ SIEMPRE apuntar a Render, nunca a localhost ⭐⭐
+  baseURL: 'https://proyecto-innovacion-digital.onrender.com',
+  timeout: 15000, // Aumenta timeout para Render
 };
 
 // Helper para construir URLs de la API
 export const buildApiUrl = (endpoint: string): string => {
-  // Si estamos en desarrollo, usar el proxy de Vite
-  if (import.meta.env.DEV) {
-    return `/api${endpoint}`;
-  }
-  // En producción, usar la URL completa
-  return `${API_CONFIG.baseURL}${endpoint}`;
+  // ⭐⭐ NUNCA usar proxy (/api) - tu backend está en Render ⭐⭐
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_CONFIG.baseURL}${normalizedEndpoint}`;
+  
+  console.log(`🌐 URL construida: ${url}`);
+  console.log(`📍 Frontend: ${window.location.origin}`);
+  console.log(`🎯 Backend: ${API_CONFIG.baseURL}`);
+  
+  return url;
 };
