@@ -10,8 +10,12 @@ class ApiService {
     private getUserId(): number | null {
         const userStr = localStorage.getItem('current_user');
         if (userStr) {
-            const user = JSON.parse(userStr);
-            return user.id;
+            try {
+                const user = JSON.parse(userStr);
+                return user.id;
+            } catch (e) {
+                return null;
+            }
         }
         return null;
     }
@@ -22,6 +26,8 @@ class ApiService {
         requiresUserId: boolean = false
     ): Promise<T> {
         const url = buildApiUrl(endpoint);
+
+        console.log(`🌐 API Call: ${options.method || 'GET'} ${url}`);
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
@@ -46,12 +52,23 @@ class ApiService {
             // Bloquear creación de órdenes (POST /orders)
             if (endpoint.includes('/orders') && method !== 'GET') {
                 console.log('⛔ Creación de órdenes bloqueada para token demo');
-                return {} as T;
+                return {
+                    id: Date.now(),
+                    orderNumber: `DEMO-${Date.now()}`,
+                    status: 'COMPLETED',
+                    message: 'Orden demo creada exitosamente'
+                } as T;
             }
 
-            // Para GET de cart e interests, retornar vacío
+            // Para GET de cart e interests, retornar datos demo
             if ((endpoint.includes('/cart') || endpoint.includes('/interests')) && method === 'GET') {
-                console.log('📭 Retornando datos vacíos para:', endpoint);
+                console.log('📭 Retornando datos demo para:', endpoint);
+                if (endpoint.includes('/cart')) {
+                    return [
+                        { id: 1, productId: 101, quantity: 2, name: 'Producto Demo 1', price: 99.99 },
+                        { id: 2, productId: 102, quantity: 1, name: 'Producto Demo 2', price: 149.99 }
+                    ] as T;
+                }
                 return [] as T;
             }
         }
@@ -72,10 +89,14 @@ class ApiService {
             const response = await fetch(url, {
                 ...options,
                 headers,
+                mode: 'cors',  // ⭐⭐ IMPORTANTE para CORS ⭐⭐
             });
+
+            console.log(`📊 Response: ${response.status} ${response.statusText}`);
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error(`❌ API Error ${response.status}:`, errorText);
                 throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
 
@@ -83,7 +104,8 @@ class ApiService {
             const text = await response.text();
             return text ? JSON.parse(text) : {} as T;
         } catch (error) {
-            console.error('API request failed:', error);
+            console.error('🚨 API request failed:', error);
+            console.error('🔍 URL attempted:', url);
             throw error;
         }
     }
@@ -117,65 +139,65 @@ class ApiService {
 
 export const apiService = new ApiService();
 
-// Servicios específicos para cada entidad
+// ⭐⭐ SERVICIOS CORREGIDOS - TODAS LAS RUTAS CON /api ⭐⭐
 
-// Productos
+// Productos - CON /api/products
 export const productService = {
-    getAll: () => apiService.get<Product[]>('/products'),
-    getById: (id: number) => apiService.get<Product>(`/products/${id}`),
-    getByCategory: (category: string) => apiService.get<Product[]>(`/products/category/${category}`),
-    search: (query: string) => apiService.get<Product[]>(`/products/search?q=${query}`),
+    getAll: () => apiService.get<Product[]>('/api/products'),
+    getById: (id: number) => apiService.get<Product>(`/api/products/${id}`),
+    getByCategory: (category: string) => apiService.get<Product[]>(`/api/products/category/${category}`),
+    search: (query: string) => apiService.get<Product[]>(`/api/products/search?q=${query}`),
 };
 
-// Categorías
+// Categorías - CON /api/categories
 export const categoryService = {
-    getAll: () => apiService.get<string[]>('/categories'),
+    getAll: () => apiService.get<string[]>('/api/categories'),
 };
 
-// Órdenes
+// Órdenes - CON /api/orders
 export const orderService = {
-    getAll: () => apiService.get<Order[]>('/orders'),
-    getById: (id: number) => apiService.get<Order>(`/orders/${id}`),
-    getByUserId: (userId: number) => apiService.get<Order[]>(`/orders/user/${userId}`),
-    create: (orderData: any) => apiService.post<Order>('/orders', orderData, true), // Requiere X-User-Id
+    getAll: () => apiService.get<Order[]>('/api/orders'),
+    getById: (id: number) => apiService.get<Order>(`/api/orders/${id}`),
+    getByUserId: (userId: number) => apiService.get<Order[]>(`/api/orders/user/${userId}`),
+    create: (orderData: any) => apiService.post<Order>('/api/orders', orderData, true), // Requiere X-User-Id
 };
 
-// Usuarios / Autenticación
+// Usuarios / Autenticación - CON /api/auth
 export const authService = {
-    login: (credentials: LoginRequest) => apiService.post<AuthResponse>('/auth/login', credentials),
-    register: (userData: RegisterRequest) => apiService.post<AuthResponse>('/auth/register', userData),
+    login: (credentials: LoginRequest) => apiService.post<AuthResponse>('/api/auth/login', credentials),
+    register: (userData: RegisterRequest) => apiService.post<AuthResponse>('/api/auth/register', userData),
 };
 
-// Intereses de productos
+// Intereses de productos - CON /api/interests
 export const interestService = {
     trackProductInterest: (productId: number) =>
-        apiService.post<void>(`/interests/${productId}`, undefined, true), // Requiere X-User-Id
+        apiService.post<void>(`/api/interests/${productId}`, undefined, true), // Requiere X-User-Id
     getRecommendedProducts: () =>
-        apiService.get<Product[]>('/interests/recommended', true), // Requiere X-User-Id
+        apiService.get<Product[]>('/api/interests/recommended', true), // Requiere X-User-Id
 };
 
-// Admin
+// Admin - CON /api/admin
 export const adminService = {
-    getStats: () => apiService.get<any>('/admin/stats'),
-    getSalesByCategory: () => apiService.get<any>('/admin/sales-by-category'),
-    getTopProducts: () => apiService.get<any>('/admin/top-products'),
-    getSalesByPayment: () => apiService.get<any>('/admin/sales-by-payment'),
+    getStats: () => apiService.get<any>('/api/admin/stats'),
+    getSalesByCategory: () => apiService.get<any>('/api/admin/sales-by-category'),
+    getTopProducts: () => apiService.get<any>('/api/admin/top-products'),
+    getSalesByPayment: () => apiService.get<any>('/api/admin/sales-by-payment'),
 };
 
-// Cart Service
+// Cart Service - CON /api/cart
 export const cartService = {
-    getCart: () => apiService.get<any>('/cart', true),
+    getCart: () => apiService.get<any>('/api/cart', true),
     addToCart: (productId: number, quantity: number = 1) =>
-        apiService.post<any>('/cart', { productId, quantity }, true),
+        apiService.post<any>('/api/cart', { productId, quantity }, true),
     updateCartItem: (productId: number, quantity: number) =>
-        apiService.put<any>(`/cart/${productId}`, { productId, quantity }, true),
+        apiService.put<any>(`/api/cart/${productId}`, { productId, quantity }, true),
     removeFromCart: (productId: number) =>
-        apiService.delete<void>(`/cart/${productId}`, true),
-    clearCart: () => apiService.delete<void>('/cart', true),
+        apiService.delete<void>(`/api/cart/${productId}`, true),
+    clearCart: () => apiService.delete<void>('/api/cart', true),
 };
 
-// User Service
+// User Service - CON /api/users
 export const userService = {
-    getAll: () => apiService.get<any[]>('/users'),
-    getById: (id: number) => apiService.get<any>(`/users/${id}`),
+    getAll: () => apiService.get<any[]>('/api/users'),
+    getById: (id: number) => apiService.get<any>(`/api/users/${id}`),
 };
