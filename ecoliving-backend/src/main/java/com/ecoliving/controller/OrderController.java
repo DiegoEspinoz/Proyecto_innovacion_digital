@@ -55,4 +55,18 @@ public class OrderController {
     public ResponseEntity<List<Order>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
+
+    private final com.ecoliving.service.PdfService pdfService;
+
+    @GetMapping("/{id}/receipt")
+    public ResponseEntity<byte[]> downloadReceipt(@PathVariable Long id) {
+        Order order = orderService.getOrderById(id);
+        byte[] pdfBytes = pdfService.generateReceipt(order);
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=receipt-" + id + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
 }

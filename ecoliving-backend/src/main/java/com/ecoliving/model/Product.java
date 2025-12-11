@@ -35,9 +35,9 @@ public class Product {
     @Column(nullable = false)
     private Integer stock;
 
-    @ElementCollection
-    @CollectionTable(name = "product_eco_features", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "feature")
-    private List<String> ecoFeatures;
-}
+    @Column(name = "eco_features_group_id")
+    private Long ecoFeaturesGroupId;
 
+    @Transient
+    private List<String> ecoFeatures; // Maintained for DTO compatibility but not persisted directly in this table
+}

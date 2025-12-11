@@ -34,5 +34,9 @@ public class ProductController {
     public ResponseEntity<List<ProductDto>> searchProducts(@RequestParam String q) {
         return ResponseEntity.ok(productService.searchProducts(q));
     }
-}
 
+    @PostMapping
+    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
+        return ResponseEntity.ok(productService.saveProduct(productDto));
+    }
+}

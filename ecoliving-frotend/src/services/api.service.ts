@@ -135,6 +135,29 @@ class ApiService {
     async delete<T>(endpoint: string, requiresUserId: boolean = false): Promise<T> {
         return this.request<T>(endpoint, { method: 'DELETE' }, requiresUserId);
     }
+
+    // Nuevo método para descargar archivos (Blob)
+    async getBlob(endpoint: string): Promise<Blob> {
+        const url = buildApiUrl(endpoint);
+        const token = this.getAuthToken();
+        const headers: Record<string, string> = {};
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+            mode: 'cors'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.blob();
+    }
 }
 
 export const apiService = new ApiService();
@@ -147,6 +170,7 @@ export const productService = {
     getById: (id: number) => apiService.get<Product>(`/api/products/${id}`),
     getByCategory: (category: string) => apiService.get<Product[]>(`/api/products/category/${category}`),
     search: (query: string) => apiService.get<Product[]>(`/api/products/search?q=${query}`),
+    create: (product: Omit<Product, 'id'>) => apiService.post<Product>('/api/products', product),
 };
 
 // Categorías - CON /api/categories
@@ -160,6 +184,8 @@ export const orderService = {
     getById: (id: number) => apiService.get<Order>(`/api/orders/${id}`),
     getByUserId: (userId: number) => apiService.get<Order[]>(`/api/orders/user/${userId}`),
     create: (orderData: any) => apiService.post<Order>('/api/orders', orderData, true), // Requiere X-User-Id
+    getReceiptUrl: (id: number) => buildApiUrl(`/api/orders/${id}/receipt`),
+    downloadReceipt: (id: number) => apiService.getBlob(`/api/orders/${id}/receipt`),
 };
 
 // Usuarios / Autenticación - CON /api/auth

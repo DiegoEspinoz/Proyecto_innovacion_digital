@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Package, DollarSign, ShoppingCart, Users, TrendingUp, Calendar, Sparkles, CreditCard } from 'lucide-react';
+import { Package, DollarSign, ShoppingCart, Users, TrendingUp, Calendar, Sparkles, CreditCard, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
@@ -10,18 +10,21 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Order, Product } from '../types';
 import { orderService, userService } from '../services/api.service';
 import { EventsManager } from './EventsManager';
+import { ProductFormDialog } from './ProductFormDialog';
 
 interface AdminDashboardProps {
   products: Product[];
+  onRefresh: () => void;
 }
 
-export function AdminDashboard({ products }: AdminDashboardProps) {
+export function AdminDashboard({ products, onRefresh }: AdminDashboardProps) {
   console.log('🎨 AdminDashboard renderizado con', products.length, 'productos');
 
   const [timeRange, setTimeRange] = useState('month');
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Cargar órdenes y usuarios desde el backend
   useEffect(() => {
@@ -178,6 +181,10 @@ export function AdminDashboard({ products }: AdminDashboardProps) {
             Gestiona tu tienda y visualiza estadísticas en tiempo real
           </p>
         </div>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Producto
+        </Button>
       </div>
 
       {/* Tarjetas de estadísticas */}
@@ -462,6 +469,11 @@ export function AdminDashboard({ products }: AdminDashboardProps) {
           <EventsManager products={products} />
         </TabsContent>
       </Tabs>
+      <ProductFormDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onProductCreated={onRefresh}
+      />
     </div>
   );
 }

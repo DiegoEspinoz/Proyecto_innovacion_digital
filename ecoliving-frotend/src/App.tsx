@@ -36,19 +36,19 @@ export default function App() {
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
+  // Cargar productos desde el backend
+  const loadProducts = async () => {
+    try {
+      const productsFromBackend = await productService.getAll();
+      setProducts(productsFromBackend);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast.error('Error al cargar productos. Verifica que el backend esté corriendo.');
+    }
+  };
+
   // Inicializar productos y usuario al cargar
   useEffect(() => {
-    // Cargar productos desde el backend
-    const loadProducts = async () => {
-      try {
-        const productsFromBackend = await productService.getAll();
-        setProducts(productsFromBackend);
-      } catch (error) {
-        console.error('Error loading products:', error);
-        toast.error('Error al cargar productos. Verifica que el backend esté corriendo.');
-      }
-    };
-
     loadProducts();
 
     // Verificar si hay usuario guardado
@@ -67,6 +67,43 @@ export default function App() {
     }
   }, []);
 
+  // ... (rest of the file)
+
+  if (viewMode === 'admin' && currentUser?.role === 'admin') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Toaster position="top-right" />
+
+        {/* Admin Header */}
+        <header className="border-b bg-white sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LayoutDashboard className="w-6 h-6 text-green-600" />
+                <span>Panel de Administración - ECOLIVING</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button variant="outline" onClick={() => setViewMode('store')}>
+                  <Store className="w-4 h-4 mr-2" />
+                  Ver Tienda
+                </Button>
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">{currentUser.name}</span>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <AdminDashboard products={products} onRefresh={loadProducts} />
+      </div>
+    );
+  }
+
   // Cargar productos recomendados
   const loadRecommendedProducts = async () => {
     try {
@@ -83,10 +120,12 @@ export default function App() {
     try {
       const cartData = await cartService.getCart();
       // Convertir los datos del backend al formato del frontend
-      const items: CartItem[] = cartData.map((item: any) => ({
-        product: item.product,
-        quantity: item.quantity
-      }));
+      const items: CartItem[] = cartData
+        .filter((item: any) => item.product != null) // Filtrar ítems sin producto válido
+        .map((item: any) => ({
+          product: item.product,
+          quantity: item.quantity
+        }));
       setCartItems(items);
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -254,8 +293,30 @@ export default function App() {
     // Intentar crear orden en el backend (en segundo plano)
     try {
       console.log('📡 Enviando orden al backend...');
-      await orderService.create(orderData);
-      console.log('✅ Orden creada en el backend');
+      const newOrder = await orderService.create(orderData);
+      console.log('✅ Orden creada en el backend:', newOrder);
+
+      // Mostrar mensaje de confirmación con opción de descargar boleta
+      toast.success('¡Compra confirmada!', {
+        description: 'Tu pedido ha sido procesado exitosamente.',
+        duration: 8000,
+        action: {
+          label: 'Descargar Boleta',
+          onClick: async () => {
+            try {
+              toast.info('Descargando boleta...');
+              const blob = await orderService.downloadReceipt(newOrder.id);
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, '_blank');
+              // Optional: Revoke URL after some time
+              setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+            } catch (e) {
+              console.error('Error downloading receipt:', e);
+              toast.error('Error al descargar la boleta');
+            }
+          }
+        }
+      });
 
       // Limpiar carrito en el backend
       try {
@@ -277,7 +338,8 @@ export default function App() {
       }
     } catch (error) {
       console.error('Error creating order:', error);
-      // No mostrar error al usuario ya que la UI ya se actualizó
+      // Si falla, avisar al usuario
+      toast.error('Error al procesar la orden en el servidor');
     }
   };
 
@@ -435,7 +497,7 @@ export default function App() {
               Volver a la Tienda
             </Button>
           </div>
-          <AdminDashboard products={products} />
+          <AdminDashboard products={products} onRefresh={loadProducts} />
         </div>
       ) : (
         <>

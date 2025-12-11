@@ -8,6 +8,7 @@ import { User } from '../types';
 import { storage } from '../utils/storage';
 import { authService } from '../services/api.service';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface AuthDialogProps {
   open: boolean;
@@ -18,9 +19,11 @@ interface AuthDialogProps {
 export function AuthDialog({ open, onClose, onLogin }: AuthDialogProps) {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (password: string): { valid: boolean; message: string } => {
@@ -216,15 +219,30 @@ export function AuthDialog({ open, onClose, onLogin }: AuthDialogProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="login-password">Contraseña</Label>
-                <Input
-                  id="login-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    type={showLoginPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  >
+                    {showLoginPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
@@ -283,17 +301,32 @@ export function AuthDialog({ open, onClose, onLogin }: AuthDialogProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="register-password">Contraseña</Label>
-                <Input
-                  id="register-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  minLength={12}
-                  title="Mínimo 12 caracteres, debe incluir letra, número y símbolo"
-                />
+                <div className="relative">
+                  <Input
+                    id="register-password"
+                    type={showRegisterPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    minLength={12}
+                    title="Mínimo 12 caracteres, debe incluir letra, número y símbolo"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                  >
+                    {showRegisterPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Mínimo 12 caracteres, debe incluir letra, número y símbolo
                 </p>

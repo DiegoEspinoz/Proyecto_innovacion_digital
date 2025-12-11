@@ -75,9 +75,14 @@ export function CheckoutDialog({ open, onClose, cartItems, onConfirmPayment }: C
               <Label htmlFor="cardNumber">Número de Tarjeta</Label>
               <Input
                 id="cardNumber"
-                placeholder="1234 5678 9012 3456"
+                placeholder="0000 0000 0000 0000"
                 value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, '').slice(0, 16))}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, ''); // Solo números
+                  const formatted = val.match(/.{1,4}/g)?.join(' ') || val; // Agrupar de a 4
+                  if (val.length <= 16) setCardNumber(formatted);
+                }}
+                maxLength={19}
               />
             </div>
             <div className="space-y-2">
@@ -86,7 +91,7 @@ export function CheckoutDialog({ open, onClose, cartItems, onConfirmPayment }: C
                 id="cardName"
                 placeholder="NOMBRE APELLIDO"
                 value={cardName}
-                onChange={(e) => setCardName(e.target.value)}
+                onChange={(e) => setCardName(e.target.value.toUpperCase())}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -96,7 +101,17 @@ export function CheckoutDialog({ open, onClose, cartItems, onConfirmPayment }: C
                   id="cardExpiry"
                   placeholder="MM/AA"
                   value={cardExpiry}
-                  onChange={(e) => setCardExpiry(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val.length <= 4) {
+                      let formatted = val;
+                      if (val.length > 2) {
+                        formatted = `${val.slice(0, 2)}/${val.slice(2)}`;
+                      }
+                      setCardExpiry(formatted);
+                    }
+                  }}
+                  maxLength={5}
                 />
               </div>
               <div className="space-y-2">
@@ -107,7 +122,7 @@ export function CheckoutDialog({ open, onClose, cartItems, onConfirmPayment }: C
                   type="password"
                   maxLength={3}
                   value={cardCvv}
-                  onChange={(e) => setCardCvv(e.target.value)}
+                  onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
                 />
               </div>
             </div>

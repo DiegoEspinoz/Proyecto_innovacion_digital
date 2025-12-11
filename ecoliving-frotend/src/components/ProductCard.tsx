@@ -58,7 +58,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
           {product.description}
         </p>
         <div className="flex flex-wrap gap-1 mb-3">
-          {product.ecoFeatures.slice(0, 2).map((feature, index) => (
+          {product.ecoFeatures?.slice(0, 2).map((feature, index) => (
             <Badge key={index} variant="outline" className="text-xs">
               {feature}
             </Badge>
