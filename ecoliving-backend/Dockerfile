@@ -42,3 +42,5 @@ ENTRYPOINT ["java", \
     "-XX:+UseStringDeduplication", \
     "-jar", \
     "app.jar"]
+
+# Nota: Se ha optimizado el comando de inicio para mejorar el rendimiento en entornos de contenedores.
